@@ -1,0 +1,38 @@
+{
+  "private": true,
+  "name": "system",
+  "author": "zhangtianlin <221122030315@zjut.edu.cn>",
+  "scripts": {
+    "dev": "umi dev",
+    "build": "umi build",
+    "postinstall": "umi setup",
+    "setup": "umi setup",
+    "start": "npm run dev",
+    "lint": "umi lint",
+    "openapi": "umi openapi"
+  },
+  "dependencies": {
+    "@ant-design/cssinjs": "1.18.1",
+    "@ant-design/pro-layout": "^7.17.16",
+    "antd": "^5.12.5",
+    "momentjs": "^2.0.0",
+    "qs": "^6.11.2",
+    "umi": "^4.0.90",
+    "umi-request": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/qs": "^6.9.11",
+    "@types/react": "^18.0.33",
+    "@types/react-dom": "^18.0.11",
+    "@umijs/lint": "^4.0.90",
+    "@umijs/max-plugin-openapi": "^2.0.3",
+    "@umijs/plugins": "^4.0.90",
+    "eslint": "^8.56.0",
+    "prettier": "3.1.1",
+    "prettier-plugin-tailwindcss": "^0.5.10",
+    "stylelint": "^16.1.0",
+    "tailwindcss": "^3",
+    "typescript": "^5.0.3"
+  }
+}

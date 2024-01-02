@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    button,
+    [type="button"],
+    [type="reset"],
+    [type="submit"] {
+        background-color: #3b82f6;
+    }
+}
+
+/**解决antd样式冲突**/
+:global(.anticon svg) {
+    vertical-align: baseline;
+}
+
+:global(.ant-btn-primary) {
+    background-color: #1677ff;
+}
+
+:global(.ant-btn-default, .ant-btn-dashed) {
+    background-color: white;
+}
