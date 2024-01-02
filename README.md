@@ -1,6 +1,7 @@
 # Introduce
 - 这是一个基于umi4的后台管理系统模板,引入组件库antd与ant-design-pro,并且引入tailwindcss!
 - 由于umi4只能提供一个request实例，所以又引入了umi-request，进行二次封装，以供其它模块使用。
+- 并且集成openAPI，可以自动生成接口请求代码，省去了手写接口请求代码的繁琐。
 
 ## Environment Prepare
 

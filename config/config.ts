@@ -62,10 +62,12 @@ export default defineConfig({
   alias: {
     "@": require("path").resolve(__dirname, "src"),
   },
-  openAPI: {
-    requestLibPath: "import { request } from 'umi'", // 请求方法路径
-    schemaPath: "http://127.0.0.1:8081/api/v2/api-docs", // 接口文档地址
-    projectName: "test", // 项目名称
-    namespace: "API", // 命名空间名称 默认值 API
-  },
+  openAPI: [
+    // {
+    //   requestLibPath: "import { request } from 'umi'", // 请求方法路径
+    //   schemaPath: "http://127.0.0.1:8081/api/v2/api-docs", // 接口文档地址
+    //   projectName: "test", // 项目名称
+    //   namespace: "API", // 命名空间名称 默认值 API
+    // },
+  ],
 });
