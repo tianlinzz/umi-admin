@@ -33,13 +33,11 @@ const errorHandler = async (error: ResponseError) => {
   if (status === 200) {
     const res = await response?.clone().json();
     if (res.code === 40100) {
-      // 与后端约定的登录过期状态码
       localStorage.clear();
       window.location.href = "/login";
     }
     message.error(error.message || "请求错误!");
   } else if (status === 401) {
-    // 请求状态码为 401 时，代表登录过期，跳转到登录页
     message.error("登录已过期，请重新登录");
     localStorage.clear();
     window.location.href = "/login";
@@ -54,7 +52,7 @@ const request = extend({
   timeout: 10000,
   paramsSerializer: (params: any) => {
     return qsStringify(params, { arrayFormat: "repeat" });
-  ,
+  },
 });
 
 const requestInterceptor = (url: string, options: RequestOptionsInit) => {
@@ -62,7 +60,7 @@ const requestInterceptor = (url: string, options: RequestOptionsInit) => {
   const { headers = {} } = options || {};
   const tokenHeaders = {
     tokenId: token,
-    ...headers
+    ...headers,
   };
 
   if (options.method?.toUpperCase() === "GET") {
@@ -74,12 +72,12 @@ const requestInterceptor = (url: string, options: RequestOptionsInit) => {
   if (token) {
     return {
       url,
-      options: { ...options, tokenHeaders }
+      options: { ...options, tokenHeaders },
     };
   }
   return {
     url,
-    options: { ...options }
+    options: { ...options },
   };
 };
 
@@ -88,7 +86,7 @@ const responseInterceptor = async (response: Response) => {
   if (res.code !== 0) {
     return Promise.reject({
       ...res,
-      response: response
+      response: response,
     });
   }
   return res.data;
