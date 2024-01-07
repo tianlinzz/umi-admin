@@ -27,24 +27,17 @@ const codeMessage: Record<number, string> = {
 };
 
 const errorHandler = async (error: ResponseError) => {
+  console.log(error);
   const { response, data } = error;
-  const { status = 200, statusText = "请求错误" } = response || {};
-  const errorText = codeMessage[status] || statusText;
-  if (status === 200) {
-    const res = await response?.clone().json();
-    if (res.code === 40100) {
-      localStorage.clear();
-      window.location.href = "/login";
-    }
-    message.error(error.message || "请求错误!");
-  } else if (status === 401) {
-    message.error("登录已过期，请重新登录");
+  const { status = 400 } = response || {};
+  const errorText = data.message || codeMessage[status] || "未知错误";
+  await message.error(errorText);
+  if (status === 401 || data.code === 40100) {
+    // 与后端约定的登录失效状态码， 401为默认的登录失效状态码
     localStorage.clear();
     window.location.href = "/login";
-  } else {
-    message.error(errorText);
   }
-  return Promise.reject(data);
+  return Promise.resolve(data);
 };
 
 const request = extend({
@@ -83,11 +76,15 @@ const requestInterceptor = (url: string, options: RequestOptionsInit) => {
 
 const responseInterceptor = async (response: Response) => {
   const res = await response.clone().json();
+  const error = {
+    data: res,
+    response: response,
+    type: "",
+  };
+  // 与后端约定的成功状态码
   if (res.code !== 0) {
-    return Promise.reject({
-      ...res,
-      response: response,
-    });
+    error.type = "requestError";
+    return Promise.reject(error);
   }
   return res.data;
 };
@@ -95,27 +92,27 @@ const responseInterceptor = async (response: Response) => {
 request.interceptors.request.use(requestInterceptor);
 request.interceptors.response.use(responseInterceptor);
 
-const generalRequest = (options: RequestOptions, prefix: string = "") => {
+const generalRequest = <T>(options: RequestOptions, prefix: string = ""): Promise<T> => {
   const { url, method = "get", ...restOptions } = options;
 
   const requestUrl = `${prefix}${url}`;
 
   switch (method.toUpperCase()) {
     case "POST":
-      return request.post(requestUrl, restOptions);
+      return request.post<T>(requestUrl, restOptions);
     case "PUT":
-      return request.put(requestUrl, restOptions);
+      return request.put<T>(requestUrl, restOptions);
     case "DELETE":
-      return request.delete(requestUrl, restOptions);
+      return request.delete<T>(requestUrl, restOptions);
     default:
-      return request.get(requestUrl, restOptions);
+      return request.get<T>(requestUrl, restOptions);
   }
 };
 
-export const loginRequest = (options: RequestOptions) => {
-  return generalRequest(options, LONGIN_URL);
+export const loginRequest = <T = any>(options: RequestOptions) => {
+  return generalRequest<T>(options, LONGIN_URL);
 };
 
-export const uploadRequest = (options: RequestOptions) => {
-  return generalRequest(options, UPLOAD_URL);
+export const uploadRequest = <T = any>(options: RequestOptions) => {
+  return generalRequest<T>(options, UPLOAD_URL);
 };
