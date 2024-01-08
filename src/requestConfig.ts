@@ -1,6 +1,7 @@
-import { RequestConfig, AxiosRequestConfig, AxiosResponse } from "umi";
+import { AxiosResponse, history, RequestConfig } from "umi";
 import { message, notification } from "antd";
 import { ADMIN_URL } from "@/constants";
+import type { RequestOptions } from "@@/plugin-request/request";
 
 // 错误处理方案： 错误类型
 enum ErrorShowType {
@@ -28,7 +29,7 @@ const requestConfig: RequestConfig = {
   baseURL: ADMIN_URL,
   timeout: 1000,
   headers: { "X-Requested-With": "XMLHttpRequest" },
-
+  withCredentials: true,
   // 错误处理： umi@3 的错误处理方案。
   errorConfig: {
     // 错误抛出
@@ -82,21 +83,28 @@ const requestConfig: RequestConfig = {
         // 而在node.js中是 http.ClientRequest 的实例
         message.error("None response! Please retry.");
       } else {
-        // 发送请求时出了点问题
-        message.error("Request error, please retry.");
+        // 业务代码抛出的错误
+        message.error(error);
       }
     },
   },
 
   // 请求拦截器
   requestInterceptors: [
-    (config: AxiosRequestConfig) => {
+    (config: RequestOptions) => {
       // 拦截请求配置，进行个性化处理。
       //处理 headers
       const token = localStorage.getItem("token");
       if (token) {
         config.headers!["Authorization"] = `Bearer ${token}`;
       }
+      // 允许在请求头中携带 cookie
+      config.credentials = "include";
+      // 允许跨域
+      config.headers = {
+        ...config.headers,
+        "Access-Control-Allow-Origin": "*",
+      };
       return { ...config };
     },
   ],
@@ -105,7 +113,18 @@ const requestConfig: RequestConfig = {
   responseInterceptors: [
     (response: AxiosResponse) => {
       // 拦截响应数据，进行个性化处理
-      return response.data;
+      const { data } = response as unknown as ResponseStructure;
+
+      if (data?.code === 40100) {
+        history.replace("/login");
+        return Promise.reject(data.message);
+      }
+
+      if (data?.code !== 0) {
+        return Promise.reject(data.message);
+      }
+
+      return data;
     },
   ],
 };

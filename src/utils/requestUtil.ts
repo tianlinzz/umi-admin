@@ -2,10 +2,10 @@ import { extend, RequestOptionsInit, ResponseError } from "umi-request";
 import { message } from "antd";
 import { stringify as qsStringify } from "qs";
 import { LONGIN_URL } from "@/constants";
+import { Method } from "axios";
 
 interface RequestOptions extends RequestOptionsInit {
-  url: string;
-  method?: "get" | "post" | "put" | "delete" | "GET" | "POST" | "PUT" | "DELETE";
+  method?: Method;
 }
 
 const codeMessage: Record<number, string> = {
@@ -43,12 +43,22 @@ const errorHandler = async (error: ResponseError) => {
 const request = extend({
   errorHandler,
   timeout: 10000,
+  withCredentials: true,
   paramsSerializer: (params: any) => {
     return qsStringify(params, { arrayFormat: "repeat" });
   },
 });
 
 const requestInterceptor = (url: string, options: RequestOptionsInit) => {
+  // 拦截请求配置，进行个性化处理。
+  // 允许在请求头中携带 cookie
+  options.credentials = "include";
+  // 允许跨域
+  options.headers = {
+    ...options.headers,
+    "Access-Control-Allow-Origin": "*",
+  };
+
   const token = localStorage.getItem("token");
   const { headers = {} } = options || {};
   const tokenHeaders = {
@@ -56,18 +66,19 @@ const requestInterceptor = (url: string, options: RequestOptionsInit) => {
     ...headers,
   };
 
-  if (options.method?.toUpperCase() === "GET") {
-    options.params = options.data;
-  } else {
-    options.requestType = options.requestType ? options.requestType : "json";
-  }
-
   if (token) {
     return {
       url,
       options: { ...options, tokenHeaders },
     };
   }
+
+  if (options.method?.toUpperCase() === "GET") {
+    options.params = options.data;
+  } else {
+    options.requestType = options.requestType ? options.requestType : "json";
+  }
+
   return {
     url,
     options: { ...options },
@@ -83,7 +94,7 @@ const responseInterceptor = async (response: Response) => {
   };
   // 与后端约定的成功状态码
   if (res.code !== 0) {
-    error.type = "requestError";
+    error.type = "responseError";
     return Promise.reject(error);
   }
   return res.data;
@@ -92,23 +103,28 @@ const responseInterceptor = async (response: Response) => {
 request.interceptors.request.use(requestInterceptor);
 request.interceptors.response.use(responseInterceptor);
 
-const generalRequest = <T>(options: RequestOptions, prefix: string = ""): Promise<T> => {
-  const { url, method = "get", ...restOptions } = options;
+// 确保全局只有一个请求实例
+const generalRequest = <D>(
+  url: string,
+  options: RequestOptions,
+  prefix: string = "",
+): Promise<D> => {
+  const { method = "get", ...restOptions } = options;
 
   const requestUrl = `${prefix}${url}`;
 
   switch (method.toUpperCase()) {
     case "POST":
-      return request.post<T>(requestUrl, restOptions);
+      return request.post<D>(requestUrl, restOptions);
     case "PUT":
-      return request.put<T>(requestUrl, restOptions);
+      return request.put<D>(requestUrl, restOptions);
     case "DELETE":
-      return request.delete<T>(requestUrl, restOptions);
+      return request.delete<D>(requestUrl, restOptions);
     default:
-      return request.get<T>(requestUrl, restOptions);
+      return request.get<D>(requestUrl, restOptions);
   }
 };
 
-export const loginRequest = <T = any>(options: RequestOptions) => {
-  return generalRequest<T>(options, LONGIN_URL);
+export const loginRequest = <D = any>(url: string, options: RequestOptions) => {
+  return generalRequest<D>(url, options, LONGIN_URL);
 };
