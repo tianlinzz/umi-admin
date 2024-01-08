@@ -1,7 +1,7 @@
 import { extend, RequestOptionsInit, ResponseError } from "umi-request";
 import { message } from "antd";
 import { stringify as qsStringify } from "qs";
-import { LONGIN_URL, UPLOAD_URL } from "@/constants";
+import { LONGIN_URL } from "@/constants";
 
 interface RequestOptions extends RequestOptionsInit {
   url: string;
@@ -28,7 +28,7 @@ const codeMessage: Record<number, string> = {
 
 const errorHandler = async (error: ResponseError) => {
   console.log(error);
-  const { response, data } = error;
+  const { response, data = {} as any } = error;
   const { status = 400 } = response || {};
   const errorText = data.message || codeMessage[status] || "未知错误";
   await message.error(errorText);
@@ -37,7 +37,7 @@ const errorHandler = async (error: ResponseError) => {
     localStorage.clear();
     window.location.href = "/login";
   }
-  return Promise.resolve(data);
+  throw new Error(errorText);
 };
 
 const request = extend({
@@ -111,8 +111,4 @@ const generalRequest = <T>(options: RequestOptions, prefix: string = ""): Promis
 
 export const loginRequest = <T = any>(options: RequestOptions) => {
   return generalRequest<T>(options, LONGIN_URL);
-};
-
-export const uploadRequest = <T = any>(options: RequestOptions) => {
-  return generalRequest<T>(options, UPLOAD_URL);
 };
